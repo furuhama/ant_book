@@ -3,13 +3,30 @@ macro_rules! echo {
     ($($e:expr),+) => ( { $(println!("{}", $e))+ } );
 }
 
-fn calc(len: f64, l: &Vec<f64>, k: usize) -> bool {
-    let mut sum = 0;
-    for e in l {
-        sum += (e / len) as usize;
-    }
+fn binary_search<
+    T: std::ops::Add<Output = T> + std::ops::Div<Output = T> + PartialEq + From<u8> + Copy,
+>(
+    lower: T,
+    upper: T,
+    proc: impl Fn(T) -> bool,
+) -> T {
+    let mut lower = lower;
+    let mut upper = upper;
 
-    sum >= k
+    let div = T::from(2);
+
+    loop {
+        let mid = (lower + upper) / div;
+        if lower == mid || mid == upper {
+            break mid;
+        }
+
+        if proc(mid) {
+            lower = mid;
+        } else {
+            upper = mid;
+        }
+    }
 }
 
 #[allow(unused_variables)]
@@ -19,19 +36,14 @@ fn main() {
     let k = 11;
     let l = vec![8.02, 7.43, 4.57, 5.39];
 
-    let mut mid = 0.0;
-    let mut lb = 0.0;
-    let mut ub = 10001.0;
-
-    for _ in 0..100 {
-        mid = (lb + ub) / 2.0;
-
-        if calc(mid, &l, k) {
-            lb = mid;
-        } else {
-            ub = mid;
+    let calc = |f| {
+        let mut sum = 0;
+        for e in &l {
+            sum += (e / f) as usize;
         }
-    }
+        sum >= k
+    };
+    let ans = binary_search(0.0, 10001.0, calc);
 
-    println!("{:.2}", mid);
+    println!("{:.2}", ans);
 }
